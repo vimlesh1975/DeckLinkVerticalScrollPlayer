@@ -485,10 +485,11 @@ Public Class Form1
         Dim lineHeight As Integer = CInt(Math.Ceiling(m_font.GetHeight() * 1.3))
         If lineHeight <= 0 Then lineHeight = 40
         
-        ' Loop scroll condition
+        ' End of scroll condition: Stop playback when all credits have scrolled off the screen
         Dim totalTextHeight As Integer = m_textLines.Length * lineHeight
         If m_scrollProgress > (m_previewHeight + totalTextHeight) Then
-            m_scrollProgress = 0.0
+            Me.BeginInvoke(Sub() StopPlayback())
+            Return
         End If
 
         ' Render backbuffer
