@@ -24,6 +24,8 @@ Partial Class Form1
     Private Sub InitializeComponent()
         pnlSidebar = New Panel()
         chkTransparentBg = New CheckBox()
+        lblAlignment = New Label()
+        cmbAlignment = New ComboBox()
         lblSpeedVal = New Label()
         btnLoadFile = New Button()
         lblScrollText = New Label()
@@ -55,6 +57,8 @@ Partial Class Form1
         'pnlSidebar
         '
         pnlSidebar.BackColor = Color.FromArgb(30, 30, 30)
+        pnlSidebar.Controls.Add(lblAlignment)
+        pnlSidebar.Controls.Add(cmbAlignment)
         pnlSidebar.Controls.Add(chkTransparentBg)
         pnlSidebar.Controls.Add(lblSpeedVal)
         pnlSidebar.Controls.Add(btnLoadFile)
@@ -183,6 +187,31 @@ Partial Class Form1
         chkTransparentBg.TabIndex = 18
         chkTransparentBg.Text = "Transparent Background"
         chkTransparentBg.UseVisualStyleBackColor = True
+        '
+        'lblAlignment
+        '
+        lblAlignment.AutoSize = True
+        lblAlignment.Font = New Font("Segoe UI", 9.0F)
+        lblAlignment.ForeColor = Color.FromArgb(150, 150, 150)
+        lblAlignment.Location = New Point(180, 395)
+        lblAlignment.Name = "lblAlignment"
+        lblAlignment.Size = New Size(41, 15)
+        lblAlignment.TabIndex = 19
+        lblAlignment.Text = "Align:"
+        '
+        'cmbAlignment
+        '
+        cmbAlignment.BackColor = Color.FromArgb(45, 45, 45)
+        cmbAlignment.DropDownStyle = ComboBoxStyle.DropDownList
+        cmbAlignment.FlatStyle = FlatStyle.Flat
+        cmbAlignment.Font = New Font("Segoe UI", 8.5F)
+        cmbAlignment.ForeColor = Color.White
+        cmbAlignment.FormattingEnabled = True
+        cmbAlignment.Items.AddRange(New Object() {"Left", "Center", "Right"})
+        cmbAlignment.Location = New Point(225, 392)
+        cmbAlignment.Name = "cmbAlignment"
+        cmbAlignment.Size = New Size(105, 21)
+        cmbAlignment.TabIndex = 20
         '
         'btnBgColor
         '
@@ -410,4 +439,6 @@ Partial Class Form1
     Friend WithEvents lblStatus As Label
     Friend WithEvents lblSpeedVal As Label
     Friend WithEvents chkTransparentBg As CheckBox
+    Friend WithEvents lblAlignment As Label
+    Friend WithEvents cmbAlignment As ComboBox
 End Class

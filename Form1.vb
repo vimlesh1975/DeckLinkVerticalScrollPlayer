@@ -36,6 +36,7 @@ Public Class Form1
     Private m_textColor As Color = Color.White
     Private m_bgColor As Color = Color.Black
     Private m_isBgTransparent As Boolean = False
+    Private m_textAlignment As StringAlignment = StringAlignment.Center
     Private m_font As Font = New Font("Segoe UI", 36.0F, FontStyle.Regular)
     Private m_scrollSpeed As Integer = 2
     Private m_scrollText As String = ""
@@ -91,6 +92,7 @@ Public Class Form1
         ' Disable Stop and Pause buttons at start
         btnStop.Enabled = False
         btnPause.Enabled = False
+        cmbAlignment.SelectedIndex = 1 ' Center by default
         lblSpeedVal.Text = tbSpeed.Value.ToString() & " px"
         LoadSettings()
         m_isInitializing = False
@@ -312,6 +314,20 @@ Public Class Form1
         SaveSettings()
     End Sub
 
+    Private Sub cmbAlignment_SelectedIndexChanged(sender As Object, e As EventArgs) Handles cmbAlignment.SelectedIndexChanged
+        Select Case cmbAlignment.SelectedIndex
+            Case 0 ' Left
+                m_textAlignment = StringAlignment.Near
+            Case 1 ' Center
+                m_textAlignment = StringAlignment.Center
+            Case 2 ' Right
+                m_textAlignment = StringAlignment.Far
+            Case Else
+                m_textAlignment = StringAlignment.Center
+        End Select
+        SaveSettings()
+    End Sub
+
     Private Sub btnPause_Click(sender As Object, e As EventArgs) Handles btnPause.Click
         If Not m_isRunning Then Return
 
@@ -494,7 +510,7 @@ Public Class Form1
             ' Draw text lines
             Using textBrush As New SolidBrush(m_textColor)
                 Using sf As New StringFormat()
-                    sf.Alignment = StringAlignment.Center
+                    sf.Alignment = m_textAlignment
                     sf.LineAlignment = StringAlignment.Center
 
                     For i As Integer = 0 To m_textLines.Length - 1
@@ -638,6 +654,12 @@ Public Class Form1
                 
                 chkTransparentBg.Checked = settings.TransparentBg
                 m_isBgTransparent = settings.TransparentBg
+                
+                If settings.TextAlignment >= 0 AndAlso settings.TextAlignment <= 2 Then
+                    cmbAlignment.SelectedIndex = settings.TextAlignment
+                Else
+                    cmbAlignment.SelectedIndex = 1 ' Center
+                End If
 
                 ' Try to match selected device
                 If cmbDevice.Items.Contains(settings.SelectedDeviceName) Then
@@ -674,6 +696,7 @@ Public Class Form1
             settings.BgColorArgb = m_bgColor.ToArgb()
             settings.ScrollText = txtScrollText.Text
             settings.TransparentBg = chkTransparentBg.Checked
+            settings.TextAlignment = cmbAlignment.SelectedIndex
 
             Dim path As String = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "settings.json")
             Dim json As String = JsonSerializer.Serialize(settings)
@@ -910,4 +933,5 @@ Public Class AppSettings
     Public Property BgColorArgb As Integer = -16777216
     Public Property ScrollText As String = ""
     Public Property TransparentBg As Boolean = False
+    Public Property TextAlignment As Integer = 1
 End Class
