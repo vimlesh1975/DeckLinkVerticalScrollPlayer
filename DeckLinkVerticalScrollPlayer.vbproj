@@ -1,0 +1,51 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <RootNamespace>DeckLinkVerticalScrollPlayer</RootNamespace>
+    <StartupObject>Sub Main</StartupObject>
+    <UseWindowsForms>true</UseWindowsForms>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Import Include="System.Data" />
+    <Import Include="System.Drawing" />
+    <Import Include="System.Windows.Forms" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="DeckLinkAPI">
+      <HintPath>DeckLinkAPI.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+  <Target Name="KillRunningPlayer" BeforeTargets="BeforeBuild">
+    <Exec Command="taskkill /f /im $(AssemblyName).exe 2&gt;nul || exit 0" IgnoreExitCode="true" />
+    <Exec Command="taskkill /f /im $(AssemblyName)_*.exe 2&gt;nul || exit 0" IgnoreExitCode="true" />
+  </Target>
+
+  <Target Name="CreateTimestampedExecutable" AfterTargets="Build" Condition="Exists('$(TargetDir)$(AssemblyName).exe')">
+    <PropertyGroup>
+      <ExecutableSourcePath>$(TargetDir)$(AssemblyName).exe</ExecutableSourcePath>
+      <TimestampBase>$([System.DateTime]::Now.ToString('ddMMyy_HHmmss'))</TimestampBase>
+      <TimestampedExecutablePath>$(TargetDir)$(AssemblyName)_$(TimestampBase).exe</TimestampedExecutablePath>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ExistingTimestampedExecutables Include="$(TargetDir)$(AssemblyName)_*.exe" />
+    </ItemGroup>
+
+    <!-- 1. Clean old timestamped executables -->
+    <Delete Files="@(ExistingTimestampedExecutables)" />
+
+    <!-- 2. Move the newly compiled binary to the timestamped filename -->
+    <Move SourceFiles="$(ExecutableSourcePath)" DestinationFiles="$(TimestampedExecutablePath)" />
+    
+    <!-- 3. Launch the newly created timestamped executable in a detached window -->
+    <Exec Command="cmd.exe /c start /d &quot;$(TargetDir)&quot; &quot;&quot; &quot;$(TimestampedExecutablePath)&quot;" />
+
+    <Message Importance="High" Text="MSBuild: Created and started timestamped executable: $(TimestampedExecutablePath)" />
+  </Target>
+
+</Project>

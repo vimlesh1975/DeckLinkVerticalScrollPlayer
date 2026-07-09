@@ -1,0 +1,18 @@
+# Intermediate MSBuild build artifacts
+obj/
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# App-specific runtime settings & logs (local only)
+bin/*/settings.json
+bin/*/log.txt
+settings.json
+log.txt
+
+# OS-specific files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
