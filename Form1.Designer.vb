@@ -439,11 +439,12 @@ Partial Class Form1
         AutoScaleDimensions = New SizeF(7.0F, 15.0F)
         AutoScaleMode = AutoScaleMode.Font
         BackColor = Color.FromArgb(28, 28, 28)
-        ClientSize = New Size(1344, 729)
+        ClientSize = New Size(1007, 758)
         Controls.Add(pnlPreview)
         Controls.Add(pnlSidebar)
         ForeColor = Color.White
-        MinimumSize = New Size(1024, 768)
+        MinimumSize = New Size(1007, 758)
+        MaximumSize = New Size(1007, 758)
         Name = "Form1"
         StartPosition = FormStartPosition.CenterScreen
         Text = "DeckLink Vertical Scroll Player"
