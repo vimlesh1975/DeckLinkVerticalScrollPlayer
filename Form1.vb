@@ -518,7 +518,7 @@ Public Class Form1
                         
                         ' Viewport clipping: Render only if visible
                         If lineY + lineHeight > 0 AndAlso lineY < m_previewHeight Then
-                            Dim layoutRect As New RectangleF(0, lineY, m_previewWidth, lineHeight)
+                            Dim layoutRect As New RectangleF(100.0F, lineY, CType(m_previewWidth - 200.0F, Single), CType(lineHeight, Single))
                             g.DrawString(m_textLines(i), m_font, textBrush, layoutRect, sf)
                         End If
                     Next

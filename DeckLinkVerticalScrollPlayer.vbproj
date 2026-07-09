@@ -21,8 +21,7 @@
   </ItemGroup>
 
   <Target Name="KillRunningPlayer" BeforeTargets="BeforeBuild">
-    <Exec Command="taskkill /f /im $(AssemblyName).exe 2&gt;nul || exit 0" IgnoreExitCode="true" />
-    <Exec Command="taskkill /f /im $(AssemblyName)_*.exe 2&gt;nul || exit 0" IgnoreExitCode="true" />
+    <Exec Command="taskkill /f /im $(AssemblyName)* 2&gt;nul || exit 0" IgnoreExitCode="true" />
   </Target>
 
   <Target Name="CreateTimestampedExecutable" AfterTargets="Build" Condition="Exists('$(TargetDir)$(AssemblyName).exe')">
