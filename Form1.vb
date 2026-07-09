@@ -98,8 +98,6 @@ Public Class Form1
         m_isInitializing = False
         Log("Application initialized successfully. Simulation mode = " & m_isSimulationMode.ToString())
 
-        ' Automatically start scroll playback
-        Me.BeginInvoke(Sub() btnStart.PerformClick())
     End Sub
 
     Private Sub cmbDevice_SelectedIndexChanged(sender As Object, e As EventArgs) Handles cmbDevice.SelectedIndexChanged
