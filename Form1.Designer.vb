@@ -26,6 +26,8 @@ Partial Class Form1
         chkTransparentBg = New CheckBox()
         lblAlignment = New Label()
         cmbAlignment = New ComboBox()
+        lblLineSpacing = New Label()
+        numLineSpacing = New NumericUpDown()
         lblSpeedVal = New Label()
         btnLoadFile = New Button()
         lblScrollText = New Label()
@@ -50,6 +52,7 @@ Partial Class Form1
         picPreview = New PictureBox()
         pnlSidebar.SuspendLayout()
         CType(tbSpeed, System.ComponentModel.ISupportInitialize).BeginInit()
+        CType(numLineSpacing, System.ComponentModel.ISupportInitialize).BeginInit()
         pnlPreview.SuspendLayout()
         CType(picPreview, System.ComponentModel.ISupportInitialize).BeginInit()
         SuspendLayout()
@@ -57,6 +60,8 @@ Partial Class Form1
         'pnlSidebar
         '
         pnlSidebar.BackColor = Color.FromArgb(30, 30, 30)
+        pnlSidebar.Controls.Add(lblLineSpacing)
+        pnlSidebar.Controls.Add(numLineSpacing)
         pnlSidebar.Controls.Add(lblAlignment)
         pnlSidebar.Controls.Add(cmbAlignment)
         pnlSidebar.Controls.Add(chkTransparentBg)
@@ -102,7 +107,7 @@ Partial Class Form1
         btnLoadFile.FlatStyle = FlatStyle.Flat
         btnLoadFile.Font = New Font("Segoe UI", 9.0F)
         btnLoadFile.ForeColor = Color.White
-        btnLoadFile.Location = New Point(20, 485)
+        btnLoadFile.Location = New Point(20, 515)
         btnLoadFile.Name = "btnLoadFile"
         btnLoadFile.Size = New Size(310, 30)
         btnLoadFile.TabIndex = 15
@@ -114,7 +119,7 @@ Partial Class Form1
         lblScrollText.AutoSize = True
         lblScrollText.Font = New Font("Segoe UI Semibold", 9.0F, FontStyle.Bold)
         lblScrollText.ForeColor = Color.FromArgb(150, 150, 150)
-        lblScrollText.Location = New Point(20, 525)
+        lblScrollText.Location = New Point(20, 555)
         lblScrollText.Name = "lblScrollText"
         lblScrollText.Size = New Size(81, 15)
         lblScrollText.TabIndex = 14
@@ -126,22 +131,17 @@ Partial Class Form1
         txtScrollText.BorderStyle = BorderStyle.FixedSingle
         txtScrollText.Font = New Font("Consolas", 10.0F)
         txtScrollText.ForeColor = Color.White
-        txtScrollText.Location = New Point(20, 545)
+        txtScrollText.Location = New Point(20, 575)
         txtScrollText.Multiline = True
         txtScrollText.Name = "txtScrollText"
         txtScrollText.ScrollBars = ScrollBars.Vertical
-        txtScrollText.Size = New Size(310, 160)
+        txtScrollText.Size = New Size(310, 130)
         txtScrollText.TabIndex = 13
         txtScrollText.Text = "CAST" & vbCrLf & "Director - John Doe" & vbCrLf & "Producer - Jane Smith" & vbCrLf & "Screenplay - Bob Johnson" & vbCrLf & vbCrLf & "STARRING" & vbCrLf & "Hero - Alice Brown" & vbCrLf & "Villain - Charlie Green" & vbCrLf & vbCrLf & "CREW" & vbCrLf & "Cinematography - Dave White" & vbCrLf & "Editing - Eva Black" & vbCrLf & vbCrLf & "Thank you for watching!"
         '
         'btnStop
         '
-        btnStop.BackColor = Color.FromArgb(180, 40, 40)
-        btnStop.FlatAppearance.BorderSize = 0
-        btnStop.FlatStyle = FlatStyle.Flat
-        btnStop.Font = New Font("Segoe UI", 9.5F, FontStyle.Bold)
-        btnStop.ForeColor = Color.White
-        btnStop.Location = New Point(235, 420)
+        btnStop.Location = New Point(235, 460)
         btnStop.Name = "btnStop"
         btnStop.Size = New Size(95, 45)
         btnStop.TabIndex = 12
@@ -155,7 +155,7 @@ Partial Class Form1
         btnPause.FlatStyle = FlatStyle.Flat
         btnPause.Font = New Font("Segoe UI", 9.5F, FontStyle.Bold)
         btnPause.ForeColor = Color.White
-        btnPause.Location = New Point(125, 420)
+        btnPause.Location = New Point(125, 460)
         btnPause.Name = "btnPause"
         btnPause.Size = New Size(100, 45)
         btnPause.TabIndex = 17
@@ -169,7 +169,7 @@ Partial Class Form1
         btnStart.FlatStyle = FlatStyle.Flat
         btnStart.Font = New Font("Segoe UI", 9.5F, FontStyle.Bold)
         btnStart.ForeColor = Color.White
-        btnStart.Location = New Point(20, 420)
+        btnStart.Location = New Point(20, 460)
         btnStart.Name = "btnStart"
         btnStart.Size = New Size(95, 45)
         btnStart.TabIndex = 11
@@ -181,7 +181,7 @@ Partial Class Form1
         chkTransparentBg.AutoSize = True
         chkTransparentBg.Font = New Font("Segoe UI", 9.0F)
         chkTransparentBg.ForeColor = Color.White
-        chkTransparentBg.Location = New Point(20, 395)
+        chkTransparentBg.Location = New Point(20, 428)
         chkTransparentBg.Name = "chkTransparentBg"
         chkTransparentBg.Size = New Size(160, 19)
         chkTransparentBg.TabIndex = 18
@@ -193,7 +193,7 @@ Partial Class Form1
         lblAlignment.AutoSize = True
         lblAlignment.Font = New Font("Segoe UI", 9.0F)
         lblAlignment.ForeColor = Color.FromArgb(150, 150, 150)
-        lblAlignment.Location = New Point(180, 395)
+        lblAlignment.Location = New Point(180, 428)
         lblAlignment.Name = "lblAlignment"
         lblAlignment.Size = New Size(41, 15)
         lblAlignment.TabIndex = 19
@@ -208,10 +208,37 @@ Partial Class Form1
         cmbAlignment.ForeColor = Color.White
         cmbAlignment.FormattingEnabled = True
         cmbAlignment.Items.AddRange(New Object() {"Left", "Center", "Right"})
-        cmbAlignment.Location = New Point(225, 392)
+        cmbAlignment.Location = New Point(225, 425)
         cmbAlignment.Name = "cmbAlignment"
         cmbAlignment.Size = New Size(105, 21)
         cmbAlignment.TabIndex = 20
+        '
+        'lblLineSpacing
+        '
+        lblLineSpacing.AutoSize = True
+        lblLineSpacing.Font = New Font("Segoe UI", 9.0F)
+        lblLineSpacing.ForeColor = Color.FromArgb(150, 150, 150)
+        lblLineSpacing.Location = New Point(20, 395)
+        lblLineSpacing.Name = "lblLineSpacing"
+        lblLineSpacing.Size = New Size(77, 15)
+        lblLineSpacing.TabIndex = 21
+        lblLineSpacing.Text = "Line Spacing:"
+        '
+        'numLineSpacing
+        '
+        numLineSpacing.BackColor = Color.FromArgb(45, 45, 45)
+        numLineSpacing.BorderStyle = BorderStyle.FixedSingle
+        numLineSpacing.DecimalPlaces = 1
+        numLineSpacing.Font = New Font("Segoe UI", 9.0F)
+        numLineSpacing.ForeColor = Color.White
+        numLineSpacing.Increment = New Decimal(New Integer() {1, 0, 0, 65536})
+        numLineSpacing.Location = New Point(125, 392)
+        numLineSpacing.Maximum = New Decimal(New Integer() {50, 0, 0, 65536})
+        numLineSpacing.Minimum = New Decimal(New Integer() {5, 0, 0, 65536})
+        numLineSpacing.Name = "numLineSpacing"
+        numLineSpacing.Size = New Size(65, 23)
+        numLineSpacing.TabIndex = 22
+        numLineSpacing.Value = New Decimal(New Integer() {13, 0, 0, 65536})
         '
         'btnBgColor
         '
@@ -409,6 +436,7 @@ Partial Class Form1
         pnlSidebar.ResumeLayout(False)
         pnlSidebar.PerformLayout()
         CType(tbSpeed, System.ComponentModel.ISupportInitialize).EndInit()
+        CType(numLineSpacing, System.ComponentModel.ISupportInitialize).EndInit()
         pnlPreview.ResumeLayout(False)
         pnlPreview.PerformLayout()
         CType(picPreview, System.ComponentModel.ISupportInitialize).EndInit()
@@ -441,4 +469,6 @@ Partial Class Form1
     Friend WithEvents chkTransparentBg As CheckBox
     Friend WithEvents lblAlignment As Label
     Friend WithEvents cmbAlignment As ComboBox
+    Friend WithEvents lblLineSpacing As Label
+    Friend WithEvents numLineSpacing As NumericUpDown
 End Class

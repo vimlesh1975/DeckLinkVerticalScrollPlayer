@@ -37,6 +37,7 @@ Public Class Form1
     Private m_bgColor As Color = Color.Black
     Private m_isBgTransparent As Boolean = False
     Private m_textAlignment As StringAlignment = StringAlignment.Center
+    Private m_lineSpacing As Double = 1.3
     Private m_font As Font = New Font("Segoe UI", 36.0F, FontStyle.Regular)
     Private m_scrollSpeed As Integer = 2
     Private m_scrollText As String = ""
@@ -326,6 +327,11 @@ Public Class Form1
         SaveSettings()
     End Sub
 
+    Private Sub numLineSpacing_ValueChanged(sender As Object, e As EventArgs) Handles numLineSpacing.ValueChanged
+        m_lineSpacing = CType(numLineSpacing.Value, Double)
+        SaveSettings()
+    End Sub
+
     Private Sub btnPause_Click(sender As Object, e As EventArgs) Handles btnPause.Click
         If Not m_isRunning Then Return
 
@@ -482,7 +488,7 @@ Public Class Form1
 
     Private Sub RenderFrame(ByVal localOutput As IDeckLinkOutput)
         ' Estimate line height
-        Dim lineHeight As Integer = CInt(Math.Ceiling(m_font.GetHeight() * 1.3))
+        Dim lineHeight As Integer = CInt(Math.Ceiling(m_font.GetHeight() * m_lineSpacing))
         If lineHeight <= 0 Then lineHeight = 40
         
         ' End of scroll condition: Stop playback when all credits have scrolled off the screen
@@ -660,6 +666,14 @@ Public Class Form1
                     cmbAlignment.SelectedIndex = 1 ' Center
                 End If
 
+                If settings.LineSpacing >= 0.5F AndAlso settings.LineSpacing <= 5.0F Then
+                    numLineSpacing.Value = CType(settings.LineSpacing, Decimal)
+                    m_lineSpacing = settings.LineSpacing
+                Else
+                    numLineSpacing.Value = 1.3D
+                    m_lineSpacing = 1.3
+                End If
+
                 ' Try to match selected device
                 If cmbDevice.Items.Contains(settings.SelectedDeviceName) Then
                     cmbDevice.SelectedItem = settings.SelectedDeviceName
@@ -696,6 +710,7 @@ Public Class Form1
             settings.ScrollText = txtScrollText.Text
             settings.TransparentBg = chkTransparentBg.Checked
             settings.TextAlignment = cmbAlignment.SelectedIndex
+            settings.LineSpacing = CType(numLineSpacing.Value, Single)
 
             Dim path As String = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "settings.json")
             Dim json As String = JsonSerializer.Serialize(settings)
@@ -933,4 +948,5 @@ Public Class AppSettings
     Public Property ScrollText As String = ""
     Public Property TransparentBg As Boolean = False
     Public Property TextAlignment As Integer = 1
+    Public Property LineSpacing As Single = 1.3F
 End Class
