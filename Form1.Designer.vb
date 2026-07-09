@@ -68,9 +68,6 @@ Partial Class Form1
         pnlSidebar.Controls.Add(cmbAlignment)
         pnlSidebar.Controls.Add(chkTransparentBg)
         pnlSidebar.Controls.Add(lblSpeedVal)
-        pnlSidebar.Controls.Add(btnLoadFile)
-        pnlSidebar.Controls.Add(lblScrollText)
-        pnlSidebar.Controls.Add(txtScrollText)
         pnlSidebar.Controls.Add(btnStop)
         pnlSidebar.Controls.Add(btnPause)
         pnlSidebar.Controls.Add(btnStart)
@@ -109,9 +106,9 @@ Partial Class Form1
         btnLoadFile.FlatStyle = FlatStyle.Flat
         btnLoadFile.Font = New Font("Segoe UI", 9.0F)
         btnLoadFile.ForeColor = Color.White
-        btnLoadFile.Location = New Point(20, 515)
+        btnLoadFile.Location = New Point(32, 430)
         btnLoadFile.Name = "btnLoadFile"
-        btnLoadFile.Size = New Size(310, 30)
+        btnLoadFile.Size = New Size(592, 30)
         btnLoadFile.TabIndex = 15
         btnLoadFile.Text = "Load Text File..."
         btnLoadFile.UseVisualStyleBackColor = False
@@ -121,7 +118,7 @@ Partial Class Form1
         lblScrollText.AutoSize = True
         lblScrollText.Font = New Font("Segoe UI Semibold", 9.0F, FontStyle.Bold)
         lblScrollText.ForeColor = Color.FromArgb(150, 150, 150)
-        lblScrollText.Location = New Point(20, 555)
+        lblScrollText.Location = New Point(32, 470)
         lblScrollText.Name = "lblScrollText"
         lblScrollText.Size = New Size(81, 15)
         lblScrollText.TabIndex = 14
@@ -133,11 +130,11 @@ Partial Class Form1
         txtScrollText.BorderStyle = BorderStyle.FixedSingle
         txtScrollText.Font = New Font("Consolas", 10.0F)
         txtScrollText.ForeColor = Color.White
-        txtScrollText.Location = New Point(20, 575)
+        txtScrollText.Location = New Point(32, 490)
         txtScrollText.Multiline = True
         txtScrollText.Name = "txtScrollText"
         txtScrollText.ScrollBars = ScrollBars.Vertical
-        txtScrollText.Size = New Size(310, 130)
+        txtScrollText.Size = New Size(592, 180)
         txtScrollText.TabIndex = 13
         txtScrollText.Text = "CAST" & vbCrLf & "Director - John Doe" & vbCrLf & "Producer - Jane Smith" & vbCrLf & "Screenplay - Bob Johnson" & vbCrLf & vbCrLf & "STARRING" & vbCrLf & "Hero - Alice Brown" & vbCrLf & "Villain - Charlie Green" & vbCrLf & vbCrLf & "CREW" & vbCrLf & "Cinematography - Dave White" & vbCrLf & "Editing - Eva Black" & vbCrLf & vbCrLf & "Thank you for watching!"
         '
@@ -393,6 +390,9 @@ Partial Class Form1
         pnlPreview.Controls.Add(lblStatus)
         pnlPreview.Controls.Add(lblPreviewTitle)
         pnlPreview.Controls.Add(picPreview)
+        pnlPreview.Controls.Add(btnLoadFile)
+        pnlPreview.Controls.Add(lblScrollText)
+        pnlPreview.Controls.Add(txtScrollText)
         pnlPreview.Dock = DockStyle.Fill
         pnlPreview.Location = New Point(350, 0)
         pnlPreview.Name = "pnlPreview"
@@ -401,12 +401,12 @@ Partial Class Form1
         '
         'lblStatus
         '
-        lblStatus.Anchor = AnchorStyles.Bottom Or AnchorStyles.Left Or AnchorStyles.Right
+        lblStatus.Anchor = AnchorStyles.Bottom Or AnchorStyles.Left
         lblStatus.Font = New Font("Segoe UI Semibold", 10.0F, FontStyle.Bold)
         lblStatus.ForeColor = Color.Gold
-        lblStatus.Location = New Point(30, 680)
+        lblStatus.Location = New Point(32, 680)
         lblStatus.Name = "lblStatus"
-        lblStatus.Size = New Size(934, 25)
+        lblStatus.Size = New Size(592, 25)
         lblStatus.TabIndex = 2
         lblStatus.Text = "Status: Ready"
         lblStatus.TextAlign = ContentAlignment.MiddleCenter
