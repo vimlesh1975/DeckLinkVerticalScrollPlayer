@@ -492,15 +492,10 @@ Public Class Form1
             
             RenderFrame(localOutput)
 
-            ' Wait for next frame timing
-            Dim elapsedMs As Double = stopwatch.Elapsed.TotalMilliseconds - startTimeMs
-            Dim sleepTimeMs As Integer = CInt(m_frameIntervalMs - elapsedMs)
-            
-            If sleepTimeMs > 0 Then
-                Thread.Sleep(sleepTimeMs)
-            Else
-                Thread.Sleep(1) ' Yield
-            End If
+            ' Wait for next frame timing using high-precision spin wait
+            While stopwatch.Elapsed.TotalMilliseconds - startTimeMs < m_frameIntervalMs
+                Thread.SpinWait(10)
+            End While
         End While
 
         ' Clean up output and COM
@@ -529,7 +524,9 @@ Public Class Form1
     Private Sub RenderFrame(ByVal localOutput As IDeckLinkOutput)
         Dim bmp As New Bitmap(m_previewWidth, m_previewHeight, PixelFormat.Format32bppArgb)
         Using g As Graphics = Graphics.FromImage(bmp)
-            g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAliasGridFit
+            g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAlias
+            g.PixelOffsetMode = Drawing2D.PixelOffsetMode.HighQuality
+            g.SmoothingMode = Drawing2D.SmoothingMode.HighQuality
 
             If m_isHorizontal Then
                 ' Horizontal Ticker Loop
