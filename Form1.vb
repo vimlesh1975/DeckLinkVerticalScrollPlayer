@@ -38,12 +38,15 @@ Public Class Form1
     Private m_isBgTransparent As Boolean = False
     Private m_textAlignment As StringAlignment = StringAlignment.Center
     Private m_lineSpacing As Double = 1.3
-    Private m_enableKeyer As Boolean = False
+    Private m_enableKeyer As Boolean = True
     Private m_font As Font = New Font("Segoe UI", 36.0F, FontStyle.Regular)
     Private m_scrollSpeed As Integer = 2
     Private m_scrollText As String = ""
     Private m_scrollProgress As Double = 0.0
     Private m_textLines As String() = {}
+    Private m_isHorizontal As Boolean = False
+    Private m_horizontalText As String = ""
+    Private m_horizontalTextWidth As Single = 0.0F
 
     Private Sub Form1_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         m_isSimulationMode = True
@@ -95,7 +98,6 @@ Public Class Form1
         btnStop.Enabled = False
         btnPause.Enabled = False
         cmbAlignment.SelectedIndex = 1 ' Center by default
-        lblSpeedVal.Text = tbSpeed.Value.ToString() & " px"
         LoadSettings()
         m_isInitializing = False
         Log("Application initialized successfully. Simulation mode = " & m_isSimulationMode.ToString())
@@ -261,9 +263,8 @@ Public Class Form1
         End Using
     End Sub
 
-    Private Sub tbSpeed_Scroll(sender As Object, e As EventArgs) Handles tbSpeed.Scroll
-        m_scrollSpeed = tbSpeed.Value
-        lblSpeedVal.Text = tbSpeed.Value.ToString() & " px"
+    Private Sub numSpeed_ValueChanged(sender As Object, e As EventArgs) Handles numSpeed.ValueChanged
+        m_scrollSpeed = CType(numSpeed.Value, Integer)
         SaveSettings()
     End Sub
 
@@ -272,8 +273,15 @@ Public Class Form1
 
         m_scrollText = txtScrollText.Text
         m_textLines = m_scrollText.Split(New String() {vbCrLf, vbLf}, StringSplitOptions.None)
+        m_isHorizontal = chkHorizontal.Checked
+        If m_isHorizontal Then
+            m_horizontalText = m_scrollText.Replace(vbCrLf, "   ").Replace(vbCr, "   ").Replace(vbLf, "   ")
+            While m_horizontalText.Contains("    ")
+                m_horizontalText = m_horizontalText.Replace("    ", "   ")
+            End While
+        End If
         m_scrollProgress = 0.0
-        m_scrollSpeed = tbSpeed.Value
+        m_scrollSpeed = CType(numSpeed.Value, Integer)
         m_selectedDeviceIndex = cmbDevice.SelectedIndex
         m_selectedModeIndex = cmbMode.SelectedIndex
         Log($"Start Playback requested. DeviceIdx={m_selectedDeviceIndex}, ModeIdx={m_selectedModeIndex}, Speed={m_scrollSpeed} px/frame, Text Length={m_scrollText.Length} chars.")
@@ -314,6 +322,11 @@ Public Class Form1
         SaveSettings()
     End Sub
 
+    Private Sub chkHorizontal_CheckedChanged(sender As Object, e As EventArgs) Handles chkHorizontal.CheckedChanged
+        m_isHorizontal = chkHorizontal.Checked
+        SaveSettings()
+    End Sub
+
     Private Sub cmbAlignment_SelectedIndexChanged(sender As Object, e As EventArgs) Handles cmbAlignment.SelectedIndexChanged
         Select Case cmbAlignment.SelectedIndex
             Case 0 ' Left
@@ -333,10 +346,7 @@ Public Class Form1
         SaveSettings()
     End Sub
 
-    Private Sub chkEnableKeyer_CheckedChanged(sender As Object, e As EventArgs) Handles chkEnableKeyer.CheckedChanged
-        m_enableKeyer = chkEnableKeyer.Checked
-        SaveSettings()
-    End Sub
+
 
     Private Sub btnPause_Click(sender As Object, e As EventArgs) Handles btnPause.Click
         If Not m_isRunning Then Return
@@ -517,48 +527,75 @@ Public Class Form1
     End Sub
 
     Private Sub RenderFrame(ByVal localOutput As IDeckLinkOutput)
-        ' Estimate line height
-        Dim lineHeight As Integer = CInt(Math.Ceiling(m_font.GetHeight() * m_lineSpacing))
-        If lineHeight <= 0 Then lineHeight = 40
-        
-        ' End of scroll condition: Stop playback when all credits have scrolled off the screen
-        Dim totalTextHeight As Integer = m_textLines.Length * lineHeight
-        If m_scrollProgress > (m_previewHeight + totalTextHeight) Then
-            Me.BeginInvoke(Sub() StopPlayback())
-            Return
-        End If
-
-        ' Render backbuffer
         Dim bmp As New Bitmap(m_previewWidth, m_previewHeight, PixelFormat.Format32bppArgb)
         Using g As Graphics = Graphics.FromImage(bmp)
             g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAliasGridFit
-            
-            ' Clear background
-            If m_isBgTransparent Then
-                g.Clear(Color.Transparent)
-            Else
+
+            If m_isHorizontal Then
+                ' Horizontal Ticker Loop
+                If m_horizontalTextWidth <= 0 Then
+                    m_horizontalTextWidth = g.MeasureString(m_horizontalText, m_font).Width
+                End If
+
+                Dim barHeight As Single = m_font.GetHeight() + 40.0F
+                Dim yPos As Single = m_previewHeight - barHeight
+
+                ' Draw continuous background strip for horizontal scrolling
                 Using bgBrush As New SolidBrush(m_bgColor)
-                    g.FillRectangle(bgBrush, 0, 0, m_previewWidth, m_previewHeight)
+                    g.FillRectangle(bgBrush, 0, yPos, m_previewWidth, barHeight)
+                End Using
+
+                Using textBrush As New SolidBrush(m_textColor)
+                    ' Right-to-Left scrolling logic
+                    Dim xPos As Single = CType(m_previewWidth - m_scrollProgress, Single)
+
+                    ' Looping condition: if the string has fully scrolled past the left edge
+                    If xPos < -m_horizontalTextWidth Then
+                        m_scrollProgress = 0.0 ' Wrap around
+                        xPos = m_previewWidth
+                    End If
+
+                    ' Draw primary string
+                    g.DrawString(m_horizontalText, m_font, textBrush, xPos, yPos + 20.0F)
+                    
+                    ' To ensure continuous looping visually, we can draw a secondary trailing string if the primary is exiting left
+                    ' and there is space on the right (Optional: often a ticker just starts over).
+                End Using
+            Else
+                ' Vertical Scrolling
+                Dim lineHeight As Integer = CInt(Math.Ceiling(m_font.GetHeight() * m_lineSpacing))
+                If lineHeight <= 0 Then lineHeight = 40
+                
+                Dim totalTextHeight As Integer = m_textLines.Length * lineHeight
+                If m_scrollProgress > (m_previewHeight + totalTextHeight) Then
+                    Me.BeginInvoke(Sub() StopPlayback())
+                    Return
+                End If
+
+                If m_isBgTransparent Then
+                    g.Clear(Color.Transparent)
+                Else
+                    Using bgBrush As New SolidBrush(m_bgColor)
+                        g.FillRectangle(bgBrush, 0, 0, m_previewWidth, m_previewHeight)
+                    End Using
+                End If
+
+                Using textBrush As New SolidBrush(m_textColor)
+                    Using sf As New StringFormat()
+                        sf.Alignment = m_textAlignment
+                        sf.LineAlignment = StringAlignment.Center
+
+                        For i As Integer = 0 To m_textLines.Length - 1
+                            Dim lineY As Single = CType((m_previewHeight - m_scrollProgress) + (i * lineHeight), Single)
+                            
+                            If lineY + lineHeight > 0 AndAlso lineY < m_previewHeight Then
+                                Dim layoutRect As New RectangleF(100.0F, lineY, CType(m_previewWidth - 200.0F, Single), CType(lineHeight, Single))
+                                g.DrawString(m_textLines(i), m_font, textBrush, layoutRect, sf)
+                            End If
+                        Next
+                    End Using
                 End Using
             End If
-
-            ' Draw text lines
-            Using textBrush As New SolidBrush(m_textColor)
-                Using sf As New StringFormat()
-                    sf.Alignment = m_textAlignment
-                    sf.LineAlignment = StringAlignment.Center
-
-                    For i As Integer = 0 To m_textLines.Length - 1
-                        Dim lineY As Single = CType((m_previewHeight - m_scrollProgress) + (i * lineHeight), Single)
-                        
-                        ' Viewport clipping: Render only if visible
-                        If lineY + lineHeight > 0 AndAlso lineY < m_previewHeight Then
-                            Dim layoutRect As New RectangleF(100.0F, lineY, CType(m_previewWidth - 200.0F, Single), CType(lineHeight, Single))
-                            g.DrawString(m_textLines(i), m_font, textBrush, layoutRect, sf)
-                        End If
-                    Next
-                End Using
-            End Using
         End Using
 
         ' Clone for local UI preview to avoid thread conflicts
@@ -685,15 +722,16 @@ Public Class Form1
                     m_font = New Font("Segoe UI", 36.0F, FontStyle.Regular)
                 End Try
                 
-                tbSpeed.Value = Math.Clamp(settings.ScrollSpeed, tbSpeed.Minimum, tbSpeed.Maximum)
-                m_scrollSpeed = tbSpeed.Value
-                lblSpeedVal.Text = tbSpeed.Value.ToString() & " px"
+                numSpeed.Value = Math.Clamp(settings.ScrollSpeed, numSpeed.Minimum, numSpeed.Maximum)
+                m_scrollSpeed = CType(numSpeed.Value, Integer)
                 
                 Dim loadedText As String = If(String.IsNullOrEmpty(settings.ScrollText), GetDefaultCredits(), settings.ScrollText)
                 txtScrollText.Text = loadedText.Replace(vbCrLf, vbLf).Replace(vbLf, vbCrLf)
                 
                 chkTransparentBg.Checked = settings.TransparentBg
                 m_isBgTransparent = settings.TransparentBg
+                chkHorizontal.Checked = settings.HorizontalScroll
+                m_isHorizontal = settings.HorizontalScroll
                 
                 If settings.TextAlignment >= 0 AndAlso settings.TextAlignment <= 2 Then
                     cmbAlignment.SelectedIndex = settings.TextAlignment
@@ -709,8 +747,7 @@ Public Class Form1
                     m_lineSpacing = 1.3
                 End If
 
-                chkEnableKeyer.Checked = settings.EnableKeyer
-                m_enableKeyer = settings.EnableKeyer
+                m_enableKeyer = True ' Always enable keyer by default
 
                 ' Try to match selected device
                 If cmbDevice.Items.Contains(settings.SelectedDeviceName) Then
@@ -739,7 +776,7 @@ Public Class Form1
                 settings.SelectedModeName = cmbMode.SelectedItem.ToString()
             End If
             
-            settings.ScrollSpeed = tbSpeed.Value
+            settings.ScrollSpeed = CType(numSpeed.Value, Integer)
             settings.FontName = m_font.Name
             settings.FontSize = m_font.Size
             settings.FontStyle = CInt(m_font.Style)
@@ -747,9 +784,10 @@ Public Class Form1
             settings.BgColorArgb = m_bgColor.ToArgb()
             settings.ScrollText = txtScrollText.Text
             settings.TransparentBg = chkTransparentBg.Checked
+            settings.HorizontalScroll = chkHorizontal.Checked
             settings.TextAlignment = cmbAlignment.SelectedIndex
             settings.LineSpacing = CType(numLineSpacing.Value, Single)
-            settings.EnableKeyer = chkEnableKeyer.Checked
+            settings.EnableKeyer = m_enableKeyer
 
             Dim path As String = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "settings.json")
             Dim json As String = JsonSerializer.Serialize(settings)
@@ -986,6 +1024,7 @@ Public Class AppSettings
     Public Property BgColorArgb As Integer = -16777216
     Public Property ScrollText As String = ""
     Public Property TransparentBg As Boolean = False
+    Public Property HorizontalScroll As Boolean = False
     Public Property TextAlignment As Integer = 1
     Public Property LineSpacing As Single = 1.3F
     Public Property EnableKeyer As Boolean = False
