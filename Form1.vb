@@ -38,6 +38,7 @@ Public Class Form1
     Private m_isBgTransparent As Boolean = False
     Private m_textAlignment As StringAlignment = StringAlignment.Center
     Private m_lineSpacing As Double = 1.3
+    Private m_enableKeyer As Boolean = False
     Private m_font As Font = New Font("Segoe UI", 36.0F, FontStyle.Regular)
     Private m_scrollSpeed As Integer = 2
     Private m_scrollText As String = ""
@@ -332,6 +333,11 @@ Public Class Form1
         SaveSettings()
     End Sub
 
+    Private Sub chkEnableKeyer_CheckedChanged(sender As Object, e As EventArgs) Handles chkEnableKeyer.CheckedChanged
+        m_enableKeyer = chkEnableKeyer.Checked
+        SaveSettings()
+    End Sub
+
     Private Sub btnPause_Click(sender As Object, e As EventArgs) Handles btnPause.Click
         If Not m_isRunning Then Return
 
@@ -441,6 +447,23 @@ Public Class Form1
             localOutput.EnableVideoOutput(displayModeVal, _BMDVideoOutputFlags.bmdVideoOutputFlagDefault)
             Log("DeckLink Video Output Enabled successfully on background thread.")
 
+            ' Enable hardware keying if selected
+            If m_enableKeyer Then
+                Dim keyer As IDeckLinkKeyer = TryCast(localOutput, IDeckLinkKeyer)
+                If keyer IsNot Nothing Then
+                    Log("Enabling DeckLink Hardware Keyer (External Keying)...")
+                    Try
+                        keyer.Enable(1) ' 1 = External Fill/Key output
+                        keyer.SetLevel(255) ' Fully opaque key
+                        Log("DeckLink Hardware Keyer Enabled successfully.")
+                    Catch ex As Exception
+                        Log("Warning: Failed to enable hardware keyer: " & ex.Message)
+                    End Try
+                Else
+                    Log("Warning: DeckLink device does not support hardware keying.")
+                End If
+            End If
+
         Catch ex As Exception
             Log("Error during background thread COM setup: " & ex.ToString())
             If localMode IsNot Nothing Then Marshal.ReleaseComObject(localMode)
@@ -473,6 +496,13 @@ Public Class Form1
         ' Clean up output and COM
         Try
             Log("Disabling DeckLink Video Output on background thread...")
+            If m_enableKeyer Then
+                Dim keyer As IDeckLinkKeyer = TryCast(localOutput, IDeckLinkKeyer)
+                If keyer IsNot Nothing Then
+                    keyer.Disable()
+                    Log("DeckLink Hardware Keyer Disabled.")
+                End If
+            End If
             localOutput.DisableVideoOutput()
             Log("DeckLink Video Output Disabled successfully on background thread.")
         Catch ex As Exception
@@ -568,14 +598,19 @@ Public Class Form1
                     End If
                     bmp.UnlockBits(bmpData)
 
-                    ' Convert BGRA frame to YUV frame
-                    Dim converter As New CDeckLinkVideoConversionClass()
-                    converter.ConvertFrame(videoFrameSrc, videoFrameYUV)
-                    
-                    ' Output YUV frame to the DeckLink card
-                    localOutput.DisplayVideoFrameSync(videoFrameYUV)
-                    
-                    Marshal.ReleaseComObject(converter)
+                    If m_enableKeyer Then
+                        ' Output BGRA frame directly (retains alpha channel for hardware keyer)
+                        localOutput.DisplayVideoFrameSync(videoFrameSrc)
+                    Else
+                        ' Convert BGRA frame to YUV frame
+                        Dim converter As New CDeckLinkVideoConversionClass()
+                        converter.ConvertFrame(videoFrameSrc, videoFrameYUV)
+                        
+                        ' Output YUV frame to the DeckLink card
+                        localOutput.DisplayVideoFrameSync(videoFrameYUV)
+                        
+                        Marshal.ReleaseComObject(converter)
+                    End If
                 End If
 
                 If videoFrameSrc IsNot Nothing Then Marshal.ReleaseComObject(videoFrameSrc)
@@ -674,6 +709,9 @@ Public Class Form1
                     m_lineSpacing = 1.3
                 End If
 
+                chkEnableKeyer.Checked = settings.EnableKeyer
+                m_enableKeyer = settings.EnableKeyer
+
                 ' Try to match selected device
                 If cmbDevice.Items.Contains(settings.SelectedDeviceName) Then
                     cmbDevice.SelectedItem = settings.SelectedDeviceName
@@ -711,6 +749,7 @@ Public Class Form1
             settings.TransparentBg = chkTransparentBg.Checked
             settings.TextAlignment = cmbAlignment.SelectedIndex
             settings.LineSpacing = CType(numLineSpacing.Value, Single)
+            settings.EnableKeyer = chkEnableKeyer.Checked
 
             Dim path As String = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "settings.json")
             Dim json As String = JsonSerializer.Serialize(settings)
@@ -949,4 +988,5 @@ Public Class AppSettings
     Public Property TransparentBg As Boolean = False
     Public Property TextAlignment As Integer = 1
     Public Property LineSpacing As Single = 1.3F
+    Public Property EnableKeyer As Boolean = False
 End Class

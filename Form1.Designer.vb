@@ -24,6 +24,7 @@ Partial Class Form1
     Private Sub InitializeComponent()
         pnlSidebar = New Panel()
         chkTransparentBg = New CheckBox()
+        chkEnableKeyer = New CheckBox()
         lblAlignment = New Label()
         cmbAlignment = New ComboBox()
         lblLineSpacing = New Label()
@@ -60,6 +61,7 @@ Partial Class Form1
         'pnlSidebar
         '
         pnlSidebar.BackColor = Color.FromArgb(30, 30, 30)
+        pnlSidebar.Controls.Add(chkEnableKeyer)
         pnlSidebar.Controls.Add(lblLineSpacing)
         pnlSidebar.Controls.Add(numLineSpacing)
         pnlSidebar.Controls.Add(lblAlignment)
@@ -239,6 +241,18 @@ Partial Class Form1
         numLineSpacing.Size = New Size(65, 23)
         numLineSpacing.TabIndex = 22
         numLineSpacing.Value = New Decimal(New Integer() {13, 0, 0, 65536})
+        '
+        'chkEnableKeyer
+        '
+        chkEnableKeyer.AutoSize = True
+        chkEnableKeyer.Font = New Font("Segoe UI", 9.0F)
+        chkEnableKeyer.ForeColor = Color.White
+        chkEnableKeyer.Location = New Point(200, 395)
+        chkEnableKeyer.Name = "chkEnableKeyer"
+        chkEnableKeyer.Size = New Size(100, 19)
+        chkEnableKeyer.TabIndex = 23
+        chkEnableKeyer.Text = "Fill/Key Output"
+        chkEnableKeyer.UseVisualStyleBackColor = True
         '
         'btnBgColor
         '
@@ -471,4 +485,5 @@ Partial Class Form1
     Friend WithEvents cmbAlignment As ComboBox
     Friend WithEvents lblLineSpacing As Label
     Friend WithEvents numLineSpacing As NumericUpDown
+    Friend WithEvents chkEnableKeyer As CheckBox
 End Class
