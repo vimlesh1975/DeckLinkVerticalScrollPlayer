@@ -424,12 +424,12 @@ Partial Class Form1
         '
         'picPreview
         '
-        picPreview.Anchor = AnchorStyles.Top Or AnchorStyles.Bottom Or AnchorStyles.Left Or AnchorStyles.Right
+        picPreview.Anchor = AnchorStyles.Top Or AnchorStyles.Left
         picPreview.BackColor = Color.Black
         picPreview.BorderStyle = BorderStyle.FixedSingle
-        picPreview.Location = New Point(30, 60)
+        picPreview.Location = New Point(32, 80)
         picPreview.Name = "picPreview"
-        picPreview.Size = New Size(934, 600)
+        picPreview.Size = New Size(592, 333)
         picPreview.SizeMode = PictureBoxSizeMode.Zoom
         picPreview.TabIndex = 0
         picPreview.TabStop = False
