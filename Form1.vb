@@ -465,6 +465,9 @@ Public Class Form1
             localOutput.EnableVideoOutput(displayModeVal, _BMDVideoOutputFlags.bmdVideoOutputFlagDefault)
             Log("DeckLink Video Output Enabled successfully on background thread.")
 
+            ' FORCE disable keyer to ensure YUV output works on standard monitors!
+            m_enableKeyer = False
+            
             ' Enable hardware keying if selected
             If m_enableKeyer Then
                 Dim keyer As IDeckLinkKeyer = Nothing
