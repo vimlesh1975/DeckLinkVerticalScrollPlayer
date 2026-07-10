@@ -105,15 +105,9 @@ Public Class Form1
     End Sub
 
     Private Sub cmbDevice_SelectedIndexChanged(sender As Object, e As EventArgs) Handles cmbDevice.SelectedIndexChanged
-        ' Release previous COM references
-        If m_selectedOutput IsNot Nothing Then
-            Marshal.ReleaseComObject(m_selectedOutput)
-            m_selectedOutput = Nothing
-        End If
-        If m_selectedDevice IsNot Nothing Then
-            Marshal.ReleaseComObject(m_selectedDevice)
-            m_selectedDevice = Nothing
-        End If
+        ' Removed Marshal.ReleaseComObject here as it destroys the COM instance in m_deckLinkList
+        m_selectedOutput = Nothing
+        m_selectedDevice = Nothing
 
         cmbMode.Items.Clear()
         m_displayModes.Clear()
@@ -136,6 +130,7 @@ Public Class Form1
                 Try
                     m_selectedOutput = CType(m_selectedDevice, IDeckLinkOutput)
                 Catch ex As Exception
+                    Log("Exception casting to IDeckLinkOutput: " & ex.ToString())
                     m_selectedOutput = Nothing
                 End Try
                 
