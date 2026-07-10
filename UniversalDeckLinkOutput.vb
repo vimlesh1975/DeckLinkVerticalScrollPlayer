@@ -5,8 +5,8 @@ Public Interface IUniversalDeckLinkOutput
     Sub GetDisplayModeIterator(ByRef modeIterator As IDeckLinkDisplayModeIterator)
     Sub EnableVideoOutput(displayMode As _BMDDisplayMode, outputFlags As _BMDVideoOutputFlags)
     Sub DisableVideoOutput()
-    Sub CreateVideoFrame(width As Integer, height As Integer, rowBytes As Integer, pixelFormat As _BMDPixelFormat, flags As _BMDFrameFlags, ByRef outFrame As IDeckLinkMutableVideoFrame)
-    Sub DisplayVideoFrameSync(videoFrame As IDeckLinkVideoFrame)
+    Sub CreateVideoFrame(width As Integer, height As Integer, rowBytes As Integer, pixelFormat As _BMDPixelFormat, flags As _BMDFrameFlags, ByRef outFrame As Object)
+    Sub DisplayVideoFrameSync(videoFrame As Object)
     ReadOnly Property RawObject As Object
 End Interface
 
@@ -103,19 +103,35 @@ Public Class UniversalDeckLinkOutput
         If m_version = 10 Then m_out10_11.DisableVideoOutput()
     End Sub
 
-    Public Sub CreateVideoFrame(width As Integer, height As Integer, rowBytes As Integer, pixelFormat As _BMDPixelFormat, flags As _BMDFrameFlags, ByRef outFrame As IDeckLinkMutableVideoFrame) Implements IUniversalDeckLinkOutput.CreateVideoFrame
-        If m_version = 0 Then m_outLatest.CreateVideoFrame(width, height, rowBytes, pixelFormat, flags, outFrame)
-        If m_version = 15 Then m_out15_3_1.CreateVideoFrame(width, height, rowBytes, pixelFormat, flags, outFrame)
-        If m_version = 14 Then m_out14_2_1.CreateVideoFrame(width, height, rowBytes, pixelFormat, flags, outFrame)
-        If m_version = 11 Then m_out11_4.CreateVideoFrame(width, height, rowBytes, pixelFormat, flags, outFrame)
-        If m_version = 10 Then m_out10_11.CreateVideoFrame(width, height, rowBytes, pixelFormat, flags, outFrame)
+    Public Sub CreateVideoFrame(width As Integer, height As Integer, rowBytes As Integer, pixelFormat As _BMDPixelFormat, flags As _BMDFrameFlags, ByRef outFrame As Object) Implements IUniversalDeckLinkOutput.CreateVideoFrame
+        If m_version = 0 Then
+            Dim frame As IDeckLinkMutableVideoFrame = Nothing
+            m_outLatest.CreateVideoFrame(width, height, rowBytes, pixelFormat, flags, frame)
+            outFrame = frame
+        ElseIf m_version = 15 Then
+            Dim frame As IDeckLinkMutableVideoFrame = Nothing
+            m_out15_3_1.CreateVideoFrame(width, height, rowBytes, pixelFormat, flags, frame)
+            outFrame = frame
+        ElseIf m_version = 14 Then
+            Dim frame As IDeckLinkMutableVideoFrame_v14_2_1 = Nothing
+            m_out14_2_1.CreateVideoFrame(width, height, rowBytes, pixelFormat, flags, frame)
+            outFrame = frame
+        ElseIf m_version = 11 Then
+            Dim frame As IDeckLinkMutableVideoFrame_v14_2_1 = Nothing
+            m_out11_4.CreateVideoFrame(width, height, rowBytes, pixelFormat, flags, frame)
+            outFrame = frame
+        ElseIf m_version = 10 Then
+            Dim frame As IDeckLinkMutableVideoFrame_v14_2_1 = Nothing
+            m_out10_11.CreateVideoFrame(width, height, rowBytes, pixelFormat, flags, frame)
+            outFrame = frame
+        End If
     End Sub
 
-    Public Sub DisplayVideoFrameSync(videoFrame As IDeckLinkVideoFrame) Implements IUniversalDeckLinkOutput.DisplayVideoFrameSync
-        If m_version = 0 Then m_outLatest.DisplayVideoFrameSync(videoFrame)
-        If m_version = 15 Then m_out15_3_1.DisplayVideoFrameSync(videoFrame)
-        If m_version = 14 Then m_out14_2_1.DisplayVideoFrameSync(videoFrame)
-        If m_version = 11 Then m_out11_4.DisplayVideoFrameSync(videoFrame)
-        If m_version = 10 Then m_out10_11.DisplayVideoFrameSync(videoFrame)
+    Public Sub DisplayVideoFrameSync(videoFrame As Object) Implements IUniversalDeckLinkOutput.DisplayVideoFrameSync
+        If m_version = 0 Then m_outLatest.DisplayVideoFrameSync(CType(videoFrame, IDeckLinkVideoFrame))
+        If m_version = 15 Then m_out15_3_1.DisplayVideoFrameSync(CType(videoFrame, IDeckLinkVideoFrame))
+        If m_version = 14 Then m_out14_2_1.DisplayVideoFrameSync(CType(videoFrame, IDeckLinkVideoFrame_v14_2_1))
+        If m_version = 11 Then m_out11_4.DisplayVideoFrameSync(CType(videoFrame, IDeckLinkVideoFrame_v14_2_1))
+        If m_version = 10 Then m_out10_11.DisplayVideoFrameSync(CType(videoFrame, IDeckLinkVideoFrame_v14_2_1))
     End Sub
 End Class

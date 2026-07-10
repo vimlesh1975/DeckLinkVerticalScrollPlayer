@@ -696,7 +696,7 @@ Public Class Form1
         ' Output to DeckLink hardware card
         If Not m_isSimulationMode AndAlso localOutput IsNot Nothing Then
             Try
-                Dim videoFrameSrc As IDeckLinkMutableVideoFrame = Nothing
+                Dim videoFrameSrc As Object = Nothing
                 If m_enableKeyer Then
                     Try
                         localOutput.CreateVideoFrame(m_previewWidth, m_previewHeight, m_previewWidth * 4, _BMDPixelFormat.bmdFormat8BitBGRA, _BMDFrameFlags.bmdFrameFlagDefault, videoFrameSrc)
@@ -709,7 +709,7 @@ Public Class Form1
                     End Try
                 End If
                 
-                Dim videoFrameYUV As IDeckLinkMutableVideoFrame = Nothing
+                Dim videoFrameYUV As Object = Nothing
                 If Not m_enableKeyer Then
                     Try
                         Dim rowBytesYUV As Integer = m_previewWidth * 2
