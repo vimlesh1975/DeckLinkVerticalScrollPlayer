@@ -10,10 +10,11 @@ It implements a modern dark-mode control dashboard, high-performance dual-thread
 
 ## Key Features
 
-- **Native DeckLink Broadcasting**: Outputs video frames directly to Blackmagic cards using low-latency YUV color conversion (`CDeckLinkVideoConversionClass`) and synchronized frame delivery (`DisplayVideoFrameSync`).
+- **Universal DeckLink Compatibility**: Integrates a robust `UniversalDeckLinkOutput` wrapper that dynamically probes for standard and legacy DeckLink SDK COM interfaces (v15.3, v14.2, v11.4, v10.11), allowing it to run flawlessly across entirely different generations of Blackmagic driver installations.
+- **Native Hardware Keying**: Supports full DeckLink SDI internal/external hardware keying. When enabled, it outputs standard 8-bit BGRA with alpha transparency directly to the hardware keyer to overlay graphics onto live video feeds.
+- **Custom YUV Software Converter**: For standard outputs, incorporates a high-performance native software engine to convert ARGB/BGRA bitmaps into raw UYVY `bmdFormat8BitYUV` bytes on-the-fly, completely bypassing bugged or unregistered DeckLink COM `CDeckLinkVideoConversionClass` implementations which frequently cause memory leaks and crash older setups.
 - **High-Performance Multithreading**: Decouples the rendering loop from the Windows Forms UI thread, ensuring consistent frame-rates (e.g., 50i / 60p / 50p) with no jitter or GUI freezing.
 - **Pause & Resume Controls**: Allows operators to freeze the scrolling text midway. During a pause, the rendering engine continues actively broadcasting the frozen frame to keep the SDI/HDMI connection alive and stable (avoiding receiver dropouts).
-- **Transparent Background Color**: Includes a "Transparent Background" toggle option. When selected, the background canvas is cleared with alpha transparency (Alpha = 0), allowing the text overlay to be downstream keyed cleanly.
 - **Horizontal Ticker Mode**: Includes a "Horizontal Scroll" toggle that flattens text and scrolls it continuously from right to left across a generated lower-third background strip.
 - **Auto-Startup & Restores Settings**: Automatically saves/loads the user's settings (font, colors, speed, selected device, video mode, and scroll text) to `settings.json`. Initiates streaming automatically on startup.
 - **Robust MSBuild Lifecycle Integration**: Includes custom MSBuild build targets inside the project file:

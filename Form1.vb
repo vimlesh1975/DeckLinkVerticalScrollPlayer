@@ -103,6 +103,14 @@ Public Class Form1
     End Sub
 
     Private Sub Form1_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+        Try
+            Dim exePath As String = System.Reflection.Assembly.GetExecutingAssembly().Location
+            Dim fi As New IO.FileInfo(exePath)
+            Me.Text = $"DeckLink Vertical Scroll Player - {fi.LastWriteTime.ToString("yyyy-MM-dd HH:mm:ss")}"
+        Catch
+            Me.Text = "DeckLink Vertical Scroll Player"
+        End Try
+
         m_isSimulationMode = True
         Log("--- Application Startup ---")
         
@@ -219,7 +227,17 @@ Public Class Form1
                     End Try
 
                     If cmbMode.Items.Count > 0 Then
-                        cmbMode.SelectedIndex = 0
+                        Dim foundDefault As Boolean = False
+                        For i As Integer = 0 To cmbMode.Items.Count - 1
+                            If cmbMode.Items(i).ToString().Contains("1080i50") Then
+                                cmbMode.SelectedIndex = i
+                                foundDefault = True
+                                Exit For
+                            End If
+                        Next
+                        If Not foundDefault Then
+                            cmbMode.SelectedIndex = 0
+                        End If
                         lblStatus.Text = "Status: DeckLink device loaded"
                         lblStatus.ForeColor = Color.LightGreen
                     Else
@@ -518,9 +536,6 @@ Public Class Form1
             Log("Enabling DeckLink Video Output on background thread for mode: " & displayModeVal.ToString())
             localOutput.EnableVideoOutput(displayModeVal, _BMDVideoOutputFlags.bmdVideoOutputFlagDefault)
             Log("DeckLink Video Output Enabled successfully on background thread.")
-
-            ' FORCE disable keyer to ensure YUV output works on standard monitors!
-            m_enableKeyer = False
             
             ' Enable hardware keying if selected
             If m_enableKeyer Then
