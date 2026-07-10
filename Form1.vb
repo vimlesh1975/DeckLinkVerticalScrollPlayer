@@ -630,20 +630,38 @@ Public Class Form1
                     Dim rect As New Rectangle(0, 0, m_previewWidth, m_previewHeight)
                     Dim bmpData As BitmapData = bmp.LockBits(rect, ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb)
                     
+                    Dim deckLinkBuffer As IntPtr = IntPtr.Zero
+                    Dim gotBytes As Boolean = False
+                    
                     Dim videoBuffer As IDeckLinkVideoBuffer = Nothing
                     Try
                         videoBuffer = CType(videoFrameSrc, IDeckLinkVideoBuffer)
                     Catch ex As Exception
                     End Try
+                    
                     If videoBuffer IsNot Nothing Then
                         videoBuffer.StartAccess(_BMDBufferAccessFlags.bmdBufferAccessWrite)
-                        Dim deckLinkBuffer As IntPtr = IntPtr.Zero
                         videoBuffer.GetBytes(deckLinkBuffer)
-                        
+                        gotBytes = True
+                    Else
+                        Dim oldFrame As IDeckLinkMutableVideoFrame_v14_2_1 = Nothing
+                        Try
+                            oldFrame = CType(videoFrameSrc, IDeckLinkMutableVideoFrame_v14_2_1)
+                        Catch ex As Exception
+                        End Try
+                        If oldFrame IsNot Nothing Then
+                            oldFrame.GetBytes(deckLinkBuffer)
+                            gotBytes = True
+                        End If
+                    End If
+                    
+                    If gotBytes AndAlso deckLinkBuffer <> IntPtr.Zero Then
                         Dim totalSize As Integer = m_previewWidth * m_previewHeight * 4
                         CopyMemory(deckLinkBuffer, bmpData.Scan0, CType(totalSize, IntPtr))
                         
-                        videoBuffer.EndAccess(_BMDBufferAccessFlags.bmdBufferAccessWrite)
+                        If videoBuffer IsNot Nothing Then
+                            videoBuffer.EndAccess(_BMDBufferAccessFlags.bmdBufferAccessWrite)
+                        End If
                     End If
                     bmp.UnlockBits(bmpData)
 

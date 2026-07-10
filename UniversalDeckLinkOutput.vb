@@ -39,12 +39,14 @@ Public Class UniversalDeckLinkOutput
 
         Try
             Dim outLatest As IDeckLinkOutput = CType(device, IDeckLinkOutput)
+            Console.WriteLine("UniversalDeckLinkOutput: Selected version 0 (Latest)")
             Return New UniversalDeckLinkOutput(outLatest, 0)
         Catch
         End Try
 
         Try
             Dim out15 As IDeckLinkOutput_v15_3_1 = CType(device, IDeckLinkOutput_v15_3_1)
+            Console.WriteLine("UniversalDeckLinkOutput: Selected version 15.3.1")
             Return New UniversalDeckLinkOutput(out15, 15)
         Catch
         End Try
