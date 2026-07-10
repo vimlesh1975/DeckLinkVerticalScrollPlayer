@@ -14,7 +14,7 @@ Public Class Form1
     Private m_deckLinkIterator As CDeckLinkIteratorClass
     Private m_deckLinkList As New List(Of IDeckLink)
     Private m_selectedDevice As IDeckLink
-    Private m_selectedOutput As IDeckLinkOutput
+    Private m_selectedOutput As IUniversalDeckLinkOutput
     Private m_displayModes As New List(Of IDeckLinkDisplayMode)
     Private m_selectedMode As IDeckLinkDisplayMode
     Private m_selectedDeviceIndex As Integer = -1
@@ -128,9 +128,9 @@ Public Class Form1
                 
                 ' Marshal.AddRef is handled implicitly by casting
                 Try
-                    m_selectedOutput = CType(m_selectedDevice, IDeckLinkOutput)
+                    m_selectedOutput = UniversalDeckLinkOutput.Create(m_selectedDevice)
                 Catch ex As Exception
-                    Log("Exception casting to IDeckLinkOutput: " & ex.ToString())
+                    Log("Exception casting to IUniversalDeckLinkOutput: " & ex.ToString())
                     m_selectedOutput = Nothing
                 End Try
                 
@@ -394,7 +394,7 @@ Public Class Form1
         ' Initialize COM objects on this background MTA thread to prevent cross-apartment marshaling (InvalidCastException)
         Dim deckLinkIterator As CDeckLinkIteratorClass = Nothing
         Dim localDevice As IDeckLink = Nothing
-        Dim localOutput As IDeckLinkOutput = Nothing
+        Dim localOutput As IUniversalDeckLinkOutput = Nothing
         Dim localMode As IDeckLinkDisplayMode = Nothing
 
         Try
@@ -420,7 +420,7 @@ Public Class Form1
             End If
 
             Try
-                localOutput = CType(localDevice, IDeckLinkOutput)
+                localOutput = UniversalDeckLinkOutput.Create(localDevice)
             Catch ex As Exception
                 localOutput = Nothing
             End Try
@@ -464,7 +464,7 @@ Public Class Form1
             If m_enableKeyer Then
                 Dim keyer As IDeckLinkKeyer = Nothing
                 Try
-                    keyer = CType(localOutput, IDeckLinkKeyer)
+                    keyer = CType(localOutput.RawObject, IDeckLinkKeyer)
                 Catch ex As Exception
                 End Try
                 If keyer IsNot Nothing Then
@@ -484,7 +484,7 @@ Public Class Form1
         Catch ex As Exception
             Log("Error during background thread COM setup: " & ex.ToString())
             If localMode IsNot Nothing Then Marshal.ReleaseComObject(localMode)
-            If localOutput IsNot Nothing Then Marshal.ReleaseComObject(localOutput)
+            If localOutput IsNot Nothing Then Marshal.ReleaseComObject(localOutput.RawObject)
             If localDevice IsNot Nothing Then Marshal.ReleaseComObject(localDevice)
             If deckLinkIterator IsNot Nothing Then Marshal.ReleaseComObject(deckLinkIterator)
             Return
@@ -511,7 +511,7 @@ Public Class Form1
             If m_enableKeyer Then
                 Dim keyer As IDeckLinkKeyer = Nothing
                 Try
-                    keyer = CType(localOutput, IDeckLinkKeyer)
+                    keyer = CType(localOutput.RawObject, IDeckLinkKeyer)
                 Catch ex As Exception
                 End Try
                 If keyer IsNot Nothing Then
@@ -527,12 +527,12 @@ Public Class Form1
 
         ' Release references
         If localMode IsNot Nothing Then Marshal.ReleaseComObject(localMode)
-        If localOutput IsNot Nothing Then Marshal.ReleaseComObject(localOutput)
+        If localOutput IsNot Nothing Then Marshal.ReleaseComObject(localOutput.RawObject)
         If localDevice IsNot Nothing Then Marshal.ReleaseComObject(localDevice)
         If deckLinkIterator IsNot Nothing Then Marshal.ReleaseComObject(deckLinkIterator)
     End Sub
 
-    Private Sub RenderFrame(ByVal localOutput As IDeckLinkOutput)
+    Private Sub RenderFrame(ByVal localOutput As IUniversalDeckLinkOutput)
         Dim bmp As New Bitmap(m_previewWidth, m_previewHeight, PixelFormat.Format32bppArgb)
         Using g As Graphics = Graphics.FromImage(bmp)
             g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAlias
@@ -694,7 +694,7 @@ Public Class Form1
 
         ' Clean up COM objects
         If m_selectedOutput IsNot Nothing Then
-            Marshal.ReleaseComObject(m_selectedOutput)
+            Marshal.ReleaseComObject(m_selectedOutput.RawObject)
             m_selectedOutput = Nothing
         End If
         If m_selectedDevice IsNot Nothing Then
