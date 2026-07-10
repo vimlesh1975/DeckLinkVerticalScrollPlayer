@@ -698,13 +698,25 @@ Public Class Form1
             Try
                 Dim videoFrameSrc As IDeckLinkMutableVideoFrame = Nothing
                 If m_enableKeyer Then
-                    localOutput.CreateVideoFrame(m_previewWidth, m_previewHeight, m_previewWidth * 4, _BMDPixelFormat.bmdFormat8BitBGRA, _BMDFrameFlags.bmdFrameFlagDefault, videoFrameSrc)
+                    Try
+                        localOutput.CreateVideoFrame(m_previewWidth, m_previewHeight, m_previewWidth * 4, _BMDPixelFormat.bmdFormat8BitBGRA, _BMDFrameFlags.bmdFrameFlagDefault, videoFrameSrc)
+                    Catch ex As System.Runtime.InteropServices.COMException
+                        Log("Hardware does not support BGRA for Keying (E_FAIL). Disabling Keyer and falling back to YUV.")
+                        m_enableKeyer = False
+                        Me.Invoke(Sub()
+                                      chkEnableKeyer.Checked = False
+                                  End Sub)
+                    End Try
                 End If
                 
                 Dim videoFrameYUV As IDeckLinkMutableVideoFrame = Nothing
                 If Not m_enableKeyer Then
-                    Dim rowBytesYUV As Integer = m_previewWidth * 2
-                    localOutput.CreateVideoFrame(m_previewWidth, m_previewHeight, rowBytesYUV, _BMDPixelFormat.bmdFormat8BitYUV, _BMDFrameFlags.bmdFrameFlagDefault, videoFrameYUV)
+                    Try
+                        Dim rowBytesYUV As Integer = m_previewWidth * 2
+                        localOutput.CreateVideoFrame(m_previewWidth, m_previewHeight, rowBytesYUV, _BMDPixelFormat.bmdFormat8BitYUV, _BMDFrameFlags.bmdFrameFlagDefault, videoFrameYUV)
+                    Catch ex As System.Runtime.InteropServices.COMException
+                        Log("Hardware does not support YUV frame creation (E_FAIL): " & ex.Message)
+                    End Try
                 End If
 
                 If (m_enableKeyer AndAlso videoFrameSrc IsNot Nothing) OrElse (Not m_enableKeyer AndAlso videoFrameYUV IsNot Nothing) Then
