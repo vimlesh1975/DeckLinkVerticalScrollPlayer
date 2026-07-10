@@ -133,7 +133,11 @@ Public Class Form1
                 m_selectedDevice = m_deckLinkList(devIndex)
                 
                 ' Marshal.AddRef is handled implicitly by casting
-                m_selectedOutput = TryCast(m_selectedDevice, IDeckLinkOutput)
+                Try
+                    m_selectedOutput = CType(m_selectedDevice, IDeckLinkOutput)
+                Catch ex As Exception
+                    m_selectedOutput = Nothing
+                End Try
                 
                 If m_selectedOutput Is Nothing Then
                     lblStatus.Text = "Status: Selected device does not support video output."
@@ -420,7 +424,11 @@ Public Class Form1
                 Return
             End If
 
-            localOutput = TryCast(localDevice, IDeckLinkOutput)
+            Try
+                localOutput = CType(localDevice, IDeckLinkOutput)
+            Catch ex As Exception
+                localOutput = Nothing
+            End Try
             If localOutput Is Nothing Then
                 Log("Error: Selected device does not support output on background thread.")
                 Return
@@ -459,7 +467,11 @@ Public Class Form1
 
             ' Enable hardware keying if selected
             If m_enableKeyer Then
-                Dim keyer As IDeckLinkKeyer = TryCast(localOutput, IDeckLinkKeyer)
+                Dim keyer As IDeckLinkKeyer = Nothing
+                Try
+                    keyer = CType(localOutput, IDeckLinkKeyer)
+                Catch ex As Exception
+                End Try
                 If keyer IsNot Nothing Then
                     Log("Enabling DeckLink Hardware Keyer (External Keying)...")
                     Try
@@ -502,7 +514,11 @@ Public Class Form1
         Try
             Log("Disabling DeckLink Video Output on background thread...")
             If m_enableKeyer Then
-                Dim keyer As IDeckLinkKeyer = TryCast(localOutput, IDeckLinkKeyer)
+                Dim keyer As IDeckLinkKeyer = Nothing
+                Try
+                    keyer = CType(localOutput, IDeckLinkKeyer)
+                Catch ex As Exception
+                End Try
                 If keyer IsNot Nothing Then
                     keyer.Disable()
                     Log("DeckLink Hardware Keyer Disabled.")
@@ -619,7 +635,11 @@ Public Class Form1
                     Dim rect As New Rectangle(0, 0, m_previewWidth, m_previewHeight)
                     Dim bmpData As BitmapData = bmp.LockBits(rect, ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb)
                     
-                    Dim videoBuffer As IDeckLinkVideoBuffer = TryCast(videoFrameSrc, IDeckLinkVideoBuffer)
+                    Dim videoBuffer As IDeckLinkVideoBuffer = Nothing
+                    Try
+                        videoBuffer = CType(videoFrameSrc, IDeckLinkVideoBuffer)
+                    Catch ex As Exception
+                    End Try
                     If videoBuffer IsNot Nothing Then
                         videoBuffer.StartAccess(_BMDBufferAccessFlags.bmdBufferAccessWrite)
                         Dim deckLinkBuffer As IntPtr = IntPtr.Zero
