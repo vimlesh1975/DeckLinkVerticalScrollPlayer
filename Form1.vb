@@ -42,11 +42,65 @@ Public Class Form1
     Private m_font As Font = New Font("Segoe UI", 36.0F, FontStyle.Regular)
     Private m_scrollSpeed As Integer = 2
     Private m_scrollText As String = ""
+    
+    Private m_bgraBuffer As Byte()
+    Private m_uyvyBuffer As Byte()
     Private m_scrollProgress As Double = 0.0
     Private m_textLines As String() = {}
     Private m_isHorizontal As Boolean = False
     Private m_horizontalText As String = ""
     Private m_horizontalTextWidth As Single = 0.0F
+
+    Private Sub ConvertBGRAToUYVY(bgraPtr As IntPtr, uyvyPtr As IntPtr, width As Integer, height As Integer)
+        Dim totalPixels As Integer = width * height
+        Dim totalBytes As Integer = totalPixels * 4
+        Dim uyvyBytes As Integer = totalPixels * 2
+        
+        If m_bgraBuffer Is Nothing OrElse m_bgraBuffer.Length < totalBytes Then
+            m_bgraBuffer = New Byte(totalBytes - 1) {}
+            m_uyvyBuffer = New Byte(uyvyBytes - 1) {}
+        End If
+        
+        Marshal.Copy(bgraPtr, m_bgraBuffer, 0, totalBytes)
+        
+        Dim i As Integer
+        Dim uyvyIdx As Integer = 0
+        Dim y1, y2, u, v, r1, g1, b1, r2, g2, b2 As Integer
+        Dim r_avg, g_avg, b_avg As Integer
+        
+        For i = 0 To totalBytes - 1 Step 8
+            b1 = m_bgraBuffer(i)
+            g1 = m_bgraBuffer(i + 1)
+            r1 = m_bgraBuffer(i + 2)
+            
+            b2 = m_bgraBuffer(i + 4)
+            g2 = m_bgraBuffer(i + 5)
+            r2 = m_bgraBuffer(i + 6)
+            
+            y1 = ((66 * r1 + 129 * g1 + 25 * b1 + 128) >> 8) + 16
+            y2 = ((66 * r2 + 129 * g2 + 25 * b2 + 128) >> 8) + 16
+            
+            r_avg = (r1 + r2) >> 1
+            g_avg = (g1 + g2) >> 1
+            b_avg = (b1 + b2) >> 1
+            
+            u = ((-38 * r_avg - 74 * g_avg + 112 * b_avg + 128) >> 8) + 128
+            v = ((112 * r_avg - 94 * g_avg - 18 * b_avg + 128) >> 8) + 128
+            
+            If y1 < 0 Then y1 = 0 Else If y1 > 255 Then y1 = 255
+            If y2 < 0 Then y2 = 0 Else If y2 > 255 Then y2 = 255
+            If u < 0 Then u = 0 Else If u > 255 Then u = 255
+            If v < 0 Then v = 0 Else If v > 255 Then v = 255
+            
+            m_uyvyBuffer(uyvyIdx) = CByte(u)
+            m_uyvyBuffer(uyvyIdx + 1) = CByte(y1)
+            m_uyvyBuffer(uyvyIdx + 2) = CByte(v)
+            m_uyvyBuffer(uyvyIdx + 3) = CByte(y2)
+            uyvyIdx += 4
+        Next
+        
+        Marshal.Copy(m_uyvyBuffer, 0, uyvyPtr, uyvyBytes)
+    End Sub
 
     Private Sub Form1_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         m_isSimulationMode = True
@@ -628,63 +682,83 @@ Public Class Form1
         If Not m_isSimulationMode AndAlso localOutput IsNot Nothing Then
             Try
                 Dim videoFrameSrc As IDeckLinkMutableVideoFrame = Nothing
-                localOutput.CreateVideoFrame(m_previewWidth, m_previewHeight, m_previewWidth * 4, _BMDPixelFormat.bmdFormat8BitBGRA, _BMDFrameFlags.bmdFrameFlagDefault, videoFrameSrc)
+                If m_enableKeyer Then
+                    localOutput.CreateVideoFrame(m_previewWidth, m_previewHeight, m_previewWidth * 4, _BMDPixelFormat.bmdFormat8BitBGRA, _BMDFrameFlags.bmdFrameFlagDefault, videoFrameSrc)
+                End If
                 
                 Dim videoFrameYUV As IDeckLinkMutableVideoFrame = Nothing
-                Dim rowBytesYUV As Integer = m_previewWidth * 2
-                localOutput.CreateVideoFrame(m_previewWidth, m_previewHeight, rowBytesYUV, _BMDPixelFormat.bmdFormat8BitYUV, _BMDFrameFlags.bmdFrameFlagDefault, videoFrameYUV)
+                If Not m_enableKeyer Then
+                    Dim rowBytesYUV As Integer = m_previewWidth * 2
+                    localOutput.CreateVideoFrame(m_previewWidth, m_previewHeight, rowBytesYUV, _BMDPixelFormat.bmdFormat8BitYUV, _BMDFrameFlags.bmdFrameFlagDefault, videoFrameYUV)
+                End If
 
-                If videoFrameSrc IsNot Nothing AndAlso videoFrameYUV IsNot Nothing Then
+                If (m_enableKeyer AndAlso videoFrameSrc IsNot Nothing) OrElse (Not m_enableKeyer AndAlso videoFrameYUV IsNot Nothing) Then
                     Dim rect As New Rectangle(0, 0, m_previewWidth, m_previewHeight)
                     Dim bmpData As BitmapData = bmp.LockBits(rect, ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb)
                     
-                    Dim deckLinkBuffer As IntPtr = IntPtr.Zero
-                    Dim gotBytes As Boolean = False
-                    
-                    Dim videoBuffer As IDeckLinkVideoBuffer = Nothing
-                    Try
-                        videoBuffer = CType(videoFrameSrc, IDeckLinkVideoBuffer)
-                    Catch ex As Exception
-                    End Try
-                    
-                    If videoBuffer IsNot Nothing Then
-                        videoBuffer.StartAccess(_BMDBufferAccessFlags.bmdBufferAccessWrite)
-                        videoBuffer.GetBytes(deckLinkBuffer)
-                        gotBytes = True
-                    Else
-                        Dim oldFrame As IDeckLinkMutableVideoFrame_v14_2_1 = Nothing
+                    If m_enableKeyer Then
+                        Dim deckLinkBuffer As IntPtr = IntPtr.Zero
+                        Dim gotBytes As Boolean = False
+                        Dim videoBuffer As IDeckLinkVideoBuffer = Nothing
                         Try
-                            oldFrame = CType(videoFrameSrc, IDeckLinkMutableVideoFrame_v14_2_1)
+                            videoBuffer = CType(videoFrameSrc, IDeckLinkVideoBuffer)
                         Catch ex As Exception
                         End Try
-                        If oldFrame IsNot Nothing Then
-                            oldFrame.GetBytes(deckLinkBuffer)
-                            gotBytes = True
-                        End If
-                    End If
-                    
-                    If gotBytes AndAlso deckLinkBuffer <> IntPtr.Zero Then
-                        Dim totalSize As Integer = m_previewWidth * m_previewHeight * 4
-                        CopyMemory(deckLinkBuffer, bmpData.Scan0, CType(totalSize, IntPtr))
-                        
                         If videoBuffer IsNot Nothing Then
-                            videoBuffer.EndAccess(_BMDBufferAccessFlags.bmdBufferAccessWrite)
+                            videoBuffer.StartAccess(_BMDBufferAccessFlags.bmdBufferAccessWrite)
+                            videoBuffer.GetBytes(deckLinkBuffer)
+                            gotBytes = True
+                        Else
+                            Dim oldFrame As IDeckLinkMutableVideoFrame_v14_2_1 = Nothing
+                            Try
+                                oldFrame = CType(videoFrameSrc, IDeckLinkMutableVideoFrame_v14_2_1)
+                            Catch ex As Exception
+                            End Try
+                            If oldFrame IsNot Nothing Then
+                                oldFrame.GetBytes(deckLinkBuffer)
+                                gotBytes = True
+                            End If
                         End If
-                    End If
-                    bmp.UnlockBits(bmpData)
-
-                    If m_enableKeyer Then
-                        ' Output BGRA frame directly (retains alpha channel for hardware keyer)
+                        If gotBytes AndAlso deckLinkBuffer <> IntPtr.Zero Then
+                            Dim totalSize As Integer = m_previewWidth * m_previewHeight * 4
+                            CopyMemory(deckLinkBuffer, bmpData.Scan0, CType(totalSize, IntPtr))
+                            If videoBuffer IsNot Nothing Then
+                                videoBuffer.EndAccess(_BMDBufferAccessFlags.bmdBufferAccessWrite)
+                            End If
+                        End If
+                        bmp.UnlockBits(bmpData)
                         localOutput.DisplayVideoFrameSync(videoFrameSrc)
                     Else
-                        ' Convert BGRA frame to YUV frame
-                        Dim converter As New CDeckLinkVideoConversionClass()
-                        converter.ConvertFrame(videoFrameSrc, videoFrameYUV)
-                        
-                        ' Output YUV frame to the DeckLink card
+                        Dim yuvBufferPtr As IntPtr = IntPtr.Zero
+                        Dim gotYuvBytes As Boolean = False
+                        Dim videoBufferYUV As IDeckLinkVideoBuffer = Nothing
+                        Try
+                            videoBufferYUV = CType(videoFrameYUV, IDeckLinkVideoBuffer)
+                        Catch ex As Exception
+                        End Try
+                        If videoBufferYUV IsNot Nothing Then
+                            videoBufferYUV.StartAccess(_BMDBufferAccessFlags.bmdBufferAccessWrite)
+                            videoBufferYUV.GetBytes(yuvBufferPtr)
+                            gotYuvBytes = True
+                        Else
+                            Dim oldFrameYUV As IDeckLinkMutableVideoFrame_v14_2_1 = Nothing
+                            Try
+                                oldFrameYUV = CType(videoFrameYUV, IDeckLinkMutableVideoFrame_v14_2_1)
+                            Catch ex As Exception
+                            End Try
+                            If oldFrameYUV IsNot Nothing Then
+                                oldFrameYUV.GetBytes(yuvBufferPtr)
+                                gotYuvBytes = True
+                            End If
+                        End If
+                        If gotYuvBytes AndAlso yuvBufferPtr <> IntPtr.Zero Then
+                            ConvertBGRAToUYVY(bmpData.Scan0, yuvBufferPtr, m_previewWidth, m_previewHeight)
+                            If videoBufferYUV IsNot Nothing Then
+                                videoBufferYUV.EndAccess(_BMDBufferAccessFlags.bmdBufferAccessWrite)
+                            End If
+                        End If
+                        bmp.UnlockBits(bmpData)
                         localOutput.DisplayVideoFrameSync(videoFrameYUV)
-                        
-                        Marshal.ReleaseComObject(converter)
                     End If
                 End If
 
@@ -1070,4 +1144,5 @@ Public Class AppSettings
     Public Property LineSpacing As Single = 1.3F
     Public Property EnableKeyer As Boolean = False
 End Class
+' 
 ' 
