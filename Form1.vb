@@ -697,66 +697,11 @@ Public Class Form1
                     Dim bmpData As BitmapData = bmp.LockBits(rect, ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb)
                     
                     If m_enableKeyer Then
-                        Dim deckLinkBuffer As IntPtr = IntPtr.Zero
-                        Dim gotBytes As Boolean = False
-                        Dim videoBuffer As IDeckLinkVideoBuffer = Nothing
-                        Try
-                            videoBuffer = CType(videoFrameSrc, IDeckLinkVideoBuffer)
-                        Catch ex As Exception
-                        End Try
-                        If videoBuffer IsNot Nothing Then
-                            videoBuffer.StartAccess(_BMDBufferAccessFlags.bmdBufferAccessWrite)
-                            videoBuffer.GetBytes(deckLinkBuffer)
-                            gotBytes = True
-                        Else
-                            Dim oldFrame As IDeckLinkMutableVideoFrame_v14_2_1 = Nothing
-                            Try
-                                oldFrame = CType(videoFrameSrc, IDeckLinkMutableVideoFrame_v14_2_1)
-                            Catch ex As Exception
-                            End Try
-                            If oldFrame IsNot Nothing Then
-                                oldFrame.GetBytes(deckLinkBuffer)
-                                gotBytes = True
-                            End If
-                        End If
-                        If gotBytes AndAlso deckLinkBuffer <> IntPtr.Zero Then
-                            Dim totalSize As Integer = m_previewWidth * m_previewHeight * 4
-                            CopyMemory(deckLinkBuffer, bmpData.Scan0, CType(totalSize, IntPtr))
-                            If videoBuffer IsNot Nothing Then
-                                videoBuffer.EndAccess(_BMDBufferAccessFlags.bmdBufferAccessWrite)
-                            End If
-                        End If
+                        WriteToDeckLinkFrame(videoFrameSrc, bmpData.Scan0, False)
                         bmp.UnlockBits(bmpData)
                         localOutput.DisplayVideoFrameSync(videoFrameSrc)
                     Else
-                        Dim yuvBufferPtr As IntPtr = IntPtr.Zero
-                        Dim gotYuvBytes As Boolean = False
-                        Dim videoBufferYUV As IDeckLinkVideoBuffer = Nothing
-                        Try
-                            videoBufferYUV = CType(videoFrameYUV, IDeckLinkVideoBuffer)
-                        Catch ex As Exception
-                        End Try
-                        If videoBufferYUV IsNot Nothing Then
-                            videoBufferYUV.StartAccess(_BMDBufferAccessFlags.bmdBufferAccessWrite)
-                            videoBufferYUV.GetBytes(yuvBufferPtr)
-                            gotYuvBytes = True
-                        Else
-                            Dim oldFrameYUV As IDeckLinkMutableVideoFrame_v14_2_1 = Nothing
-                            Try
-                                oldFrameYUV = CType(videoFrameYUV, IDeckLinkMutableVideoFrame_v14_2_1)
-                            Catch ex As Exception
-                            End Try
-                            If oldFrameYUV IsNot Nothing Then
-                                oldFrameYUV.GetBytes(yuvBufferPtr)
-                                gotYuvBytes = True
-                            End If
-                        End If
-                        If gotYuvBytes AndAlso yuvBufferPtr <> IntPtr.Zero Then
-                            ConvertBGRAToUYVY(bmpData.Scan0, yuvBufferPtr, m_previewWidth, m_previewHeight)
-                            If videoBufferYUV IsNot Nothing Then
-                                videoBufferYUV.EndAccess(_BMDBufferAccessFlags.bmdBufferAccessWrite)
-                            End If
-                        End If
+                        WriteToDeckLinkFrame(videoFrameYUV, bmpData.Scan0, True)
                         bmp.UnlockBits(bmpData)
                         localOutput.DisplayVideoFrameSync(videoFrameYUV)
                     End If
@@ -776,6 +721,43 @@ Public Class Form1
         ' Increment scroll coordinate only if not paused
         If Not m_isPaused Then
             m_scrollProgress += m_scrollSpeed
+        End If
+    End Sub
+
+    Private Sub WriteToDeckLinkFrame(frame As Object, bgraSourcePtr As IntPtr, isYuv As Boolean)
+        Dim ptr As IntPtr = IntPtr.Zero
+        Dim gotBytes As Boolean = False
+        
+        Dim buf As IDeckLinkVideoBuffer = TryCast(frame, IDeckLinkVideoBuffer)
+        Dim buf15 As IDeckLinkVideoBuffer_v15_3_1 = TryCast(frame, IDeckLinkVideoBuffer_v15_3_1)
+        Dim buf14 As IDeckLinkMutableVideoFrame_v14_2_1 = TryCast(frame, IDeckLinkMutableVideoFrame_v14_2_1)
+
+        If buf IsNot Nothing Then
+            buf.StartAccess(_BMDBufferAccessFlags.bmdBufferAccessWrite)
+            buf.GetBytes(ptr)
+            gotBytes = True
+        ElseIf buf15 IsNot Nothing Then
+            buf15.StartAccess(_BMDBufferAccessFlags.bmdBufferAccessWrite)
+            buf15.GetBytes(ptr)
+            gotBytes = True
+        ElseIf buf14 IsNot Nothing Then
+            buf14.GetBytes(ptr)
+            gotBytes = True
+        End If
+
+        If gotBytes AndAlso ptr <> IntPtr.Zero Then
+            If isYuv Then
+                ConvertBGRAToUYVY(bgraSourcePtr, ptr, m_previewWidth, m_previewHeight)
+            Else
+                Dim totalSize As Integer = m_previewWidth * m_previewHeight * 4
+                CopyMemory(ptr, bgraSourcePtr, CType(totalSize, IntPtr))
+            End If
+            
+            If buf IsNot Nothing Then
+                buf.EndAccess(_BMDBufferAccessFlags.bmdBufferAccessWrite)
+            ElseIf buf15 IsNot Nothing Then
+                buf15.EndAccess(_BMDBufferAccessFlags.bmdBufferAccessWrite)
+            End If
         End If
     End Sub
 
