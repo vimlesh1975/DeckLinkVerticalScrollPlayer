@@ -30,6 +30,7 @@ Partial Class Form1
         cmbAlignment = New ComboBox()
         chkTransparentBg = New CheckBox()
         chkHorizontal = New CheckBox()
+        chkEnableKeyer = New CheckBox()
         btnBgColor = New Button()
         btnTextColor = New Button()
         btnFont = New Button()
@@ -65,6 +66,7 @@ Partial Class Form1
         pnlSidebar.Controls.Add(cmbAlignment)
         pnlSidebar.Controls.Add(chkTransparentBg)
         pnlSidebar.Controls.Add(chkHorizontal)
+        pnlSidebar.Controls.Add(chkEnableKeyer)
         pnlSidebar.Controls.Add(btnBgColor)
         pnlSidebar.Controls.Add(btnTextColor)
         pnlSidebar.Controls.Add(btnFont)
@@ -159,6 +161,18 @@ Partial Class Form1
         chkHorizontal.TabIndex = 24
         chkHorizontal.Text = "Horizontal Scroll"
         chkHorizontal.UseVisualStyleBackColor = True
+        ' 
+        ' chkEnableKeyer
+        ' 
+        chkEnableKeyer.AutoSize = True
+        chkEnableKeyer.Font = New Font("Segoe UI", 9.0F)
+        chkEnableKeyer.ForeColor = Color.White
+        chkEnableKeyer.Location = New Point(180, 240)
+        chkEnableKeyer.Name = "chkEnableKeyer"
+        chkEnableKeyer.Size = New Size(150, 19)
+        chkEnableKeyer.TabIndex = 25
+        chkEnableKeyer.Text = "Hardware Keying"
+        chkEnableKeyer.UseVisualStyleBackColor = True
         ' 
         ' btnBgColor
         ' 
@@ -449,4 +463,6 @@ Partial Class Form1
     Friend WithEvents lblLineSpacing As Label
     Friend WithEvents numLineSpacing As NumericUpDown
     Friend WithEvents chkHorizontal As CheckBox
+    Friend WithEvents chkEnableKeyer As CheckBox
 End Class
+'

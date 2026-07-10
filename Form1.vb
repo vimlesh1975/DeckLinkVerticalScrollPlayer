@@ -326,6 +326,11 @@ Public Class Form1
         SaveSettings()
     End Sub
 
+    Private Sub chkEnableKeyer_CheckedChanged(sender As Object, e As EventArgs) Handles chkEnableKeyer.CheckedChanged
+        m_enableKeyer = chkEnableKeyer.Checked
+        SaveSettings()
+    End Sub
+
     Private Sub cmbAlignment_SelectedIndexChanged(sender As Object, e As EventArgs) Handles cmbAlignment.SelectedIndexChanged
         Select Case cmbAlignment.SelectedIndex
             Case 0 ' Left
@@ -763,6 +768,9 @@ Public Class Form1
                 chkHorizontal.Checked = settings.HorizontalScroll
                 m_isHorizontal = settings.HorizontalScroll
                 
+                chkEnableKeyer.Checked = settings.EnableKeyer
+                m_enableKeyer = settings.EnableKeyer
+                
                 If settings.TextAlignment >= 0 AndAlso settings.TextAlignment <= 2 Then
                     cmbAlignment.SelectedIndex = settings.TextAlignment
                 Else
@@ -817,7 +825,7 @@ Public Class Form1
             settings.HorizontalScroll = chkHorizontal.Checked
             settings.TextAlignment = cmbAlignment.SelectedIndex
             settings.LineSpacing = CType(numLineSpacing.Value, Single)
-            settings.EnableKeyer = m_enableKeyer
+            settings.EnableKeyer = chkEnableKeyer.Checked
 
             Dim path As String = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "settings.json")
             Dim json As String = JsonSerializer.Serialize(settings)
