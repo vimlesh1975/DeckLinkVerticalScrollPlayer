@@ -777,7 +777,7 @@ Public Class Form1
                     m_lineSpacing = 1.3
                 End If
 
-                m_enableKeyer = True ' Always enable keyer by default
+                ' Allow m_enableKeyer to be read from settings.json
 
                 ' Try to match selected device
                 If cmbDevice.Items.Contains(settings.SelectedDeviceName) Then
@@ -1059,3 +1059,4 @@ Public Class AppSettings
     Public Property LineSpacing As Single = 1.3F
     Public Property EnableKeyer As Boolean = False
 End Class
+' 
